@@ -1,10 +1,11 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"bytes"
+	"encoding/json"
 	"html/template"
+	"io"
+	"io/ioutil"
 )
 
 var Template = template.Must(template.ParseFiles("templates/index.html"))
@@ -76,10 +77,14 @@ func (c *RawConfig) ReadLayout() (*Layout, error) {
 func (l *Layout) Render() (string, error) {
 	buf := new(bytes.Buffer)
 
-	err := Template.Execute(buf, *l)
+	err := l.RenderTo(buf)
 	if err != nil {
 		return "", err
 	}
 
 	return buf.String(), nil
+}
+
+func (l *Layout) RenderTo(w io.Writer) error {
+	return Template.Execute(w, *l)
 }

@@ -2,12 +2,14 @@ package main
 
 import (
 	"flag"
-	"os"
 	"fmt"
+	"net/http"
+	"os"
 )
 
 var (
-	dashboard = flag.String("d", "", "Dashboard configuration faile")
+	port = flag.Int("p", 4444, "Dashboard HTTP port")
+	dashboard = flag.String("d", "", "Dashboard configuration fail")
 )
 
 func main() {
@@ -27,7 +29,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Println(layout.Render())
+	err = ListenAndServe(fmt.Sprintf(":%d", *port), layout)
+	if err != nil {
+		fmt.Println("Could not start HTTP server:", err)
+		os.Exit(1)
+	}
+}
+
+func ListenAndServe(addr string, layout *Layout) error {
+	fmt.Printf("Starting HTTP server on localhost%s\n", addr)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		err := layout.RenderTo(w)
+		if err != nil {
+			fmt.Println("Error rendering response:", err)
+		}
+	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+
+	return http.ListenAndServe(addr, nil)
 }
 
 func Usage() {
