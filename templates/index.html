@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>ExpVar Dashboard</title>
+    </head>
+    <body>
+    {{ range $index, $row := .Rows }}
+        <div class="row">
+            {{ range $index, $col := $row.Cols }}
+            <div class="col-lg-{{$col.Size}}">
+                <div class="box"></div>
+            </div>
+            {{ end }}
+        </div>
+    {{ end }}
+    </body>
+</html>
