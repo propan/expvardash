@@ -24,5 +24,17 @@
             </div>
             {{ end }}
         </div>
+        <script>
+            var ws = new WebSocket("ws://localhost:4444/updates");
+            ws.onmessage = function() {
+                // TODO: handle process messages
+            };
+            ws.onerror = function() {
+                // TODO: show error message
+            }
+            ws.onclose = function() {
+                // TODO: show error message
+            }
+        </script>
     </body>
 </html>
