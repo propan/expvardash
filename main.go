@@ -23,13 +23,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	layout, err := conf.ReadLayout()
-	if err != nil {
-		fmt.Println("Could not read dashboard layout:", err)
-		os.Exit(1)
-	}
-
-	err = ListenAndServe(fmt.Sprintf(":%d", *port), layout)
+	err = ListenAndServe(fmt.Sprintf(":%d", *port), conf.Layout)
 	if err != nil {
 		fmt.Println("Could not start HTTP server:", err)
 		os.Exit(1)
