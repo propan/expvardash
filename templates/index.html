@@ -3,16 +3,24 @@
     <head>
         <meta charset="UTF-8">
         <title>ExpVar Dashboard</title>
+        <script src="static/js/jquery-3.1.1.min.js"></script>
+        <script src="static/js/d3.min.js"></script>
+        <script src="static/js/epoch.min.js"></script>
+        <link rel="stylesheet" href="static/css/flexboxgrid.min.css" type="text/css">
+        <link rel="stylesheet" type="text/css" href="static/css/epoch.min.css">
+        <link rel="stylesheet" type="text/css" href="static/css/dashboard.css">
     </head>
     <body>
-    {{ range $index, $row := .Rows }}
-        <div class="row">
-            {{ range $index, $col := $row.Cols }}
-            <div class="col-lg-{{$col.Size}}">
-                <div class="box"></div>
+        <div class="container">
+            {{ range $index, $row := .Rows }}
+            <div class="row">
+                {{ range $index, $col := $row.Cols }}
+                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-{{$col.Size}}">
+                    <div class="box"></div>
+                </div>
+                {{ end }}
             </div>
             {{ end }}
         </div>
-    {{ end }}
     </body>
 </html>
