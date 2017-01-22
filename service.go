@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
-	"fmt"
 )
 
 type Service struct {
-	Name    string
-	URL     url.URL
+	Name string
+	URL  url.URL
 }
 
 func ParseURL(rawurl string) (*url.URL, error) {

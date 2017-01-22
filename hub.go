@@ -17,10 +17,10 @@ type Hub struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[*Client]struct{}),
-		dataCh:     make(chan []byte),
-		enterCh:    make(chan *Client),
-		leaveCh:    make(chan *Client),
+		clients: make(map[*Client]struct{}),
+		dataCh:  make(chan []byte),
+		enterCh: make(chan *Client),
+		leaveCh: make(chan *Client),
 	}
 }
 

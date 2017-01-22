@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
-	"time"
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"time"
 )
 
 type LinePoint struct {
@@ -96,11 +96,11 @@ func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *ChartsUpdates {
 		}
 		if len(ch.Services) > 0 {
 			for range ch.Services {
-				lu.Points = append(lu.Points, LinePoint{Time:now, Y: rand.Intn(10)})
+				lu.Points = append(lu.Points, LinePoint{Time: now, Y: rand.Intn(10)})
 			}
 		} else {
 			for range c.services {
-				lu.Points = append(lu.Points, LinePoint{Time:now, Y: rand.Intn(10)})
+				lu.Points = append(lu.Points, LinePoint{Time: now, Y: rand.Intn(10)})
 			}
 		}
 		u.LineCharts = append(u.LineCharts, lu)
