@@ -3,13 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	"reflect"
 	"time"
 )
 
 type LinePoint struct {
 	Time int64 `json:"time"`
-	Y    int   `json:"y"`
+	Y    int64 `json:"y"`
 }
 
 type LineChartUpdate struct {
@@ -95,16 +95,58 @@ func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *ChartsUpdates {
 			Points: []LinePoint{},
 		}
 		if len(ch.Services) > 0 {
-			for range ch.Services {
-				lu.Points = append(lu.Points, LinePoint{Time: now, Y: rand.Intn(10)})
+			for _, s := range ch.Services {
+				lu.Points = append(lu.Points, LinePoint{
+					Time: now,
+					Y:    LineChartValue(ch.Metric, vars[s]),
+				})
 			}
 		} else {
-			for range c.services {
-				lu.Points = append(lu.Points, LinePoint{Time: now, Y: rand.Intn(10)})
+			for _, s := range c.services {
+				lu.Points = append(lu.Points, LinePoint{
+					Time: now,
+					Y:    LineChartValue(ch.Metric, vars[s.Name]),
+				})
 			}
 		}
 		u.LineCharts = append(u.LineCharts, lu)
 	}
 
 	return u
+}
+
+func LineChartValue(m *Metric, vars *Expvars) int64 {
+	if vars == nil {
+		return 0
+	}
+
+	v := ReadMetric(m, vars)
+	if value, ok := v.(int64); ok {
+		return value
+	}
+
+	fmt.Printf("%s: usage of %s with line-chart is not supported\n", m.Path, reflect.TypeOf(v))
+
+	return 0
+}
+
+func ReadMetric(m *Metric, vars *Expvars) interface{} {
+	value, err := vars.GetValue(m.Path...)
+	if err != nil {
+		return 0
+	}
+
+	if v, err := value.Int64(); err == nil {
+		return v
+	} else if v, err := value.Float64(); err == nil {
+		return v
+	} else if v, err := value.Boolean(); err == nil {
+		return v
+	} else if v, err := value.String(); err == nil {
+		return v
+	} else if v, err := value.Array(); err == nil {
+		return v
+	}
+
+	return nil
 }

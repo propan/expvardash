@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 const (
@@ -15,9 +16,10 @@ type Chart interface {
 }
 
 type LineChart struct {
-	cid      string   `json:"-"`
-	Metric   string   `json:"metric"`
-	Services []string `json:"services"`
+	cid        string   `json:"-"`
+	MetricName string   `json:"metric"`
+	Metric     *Metric  `json:"-"`
+	Services   []string `json:"services"`
 }
 
 func (c *LineChart) ID() string {
@@ -46,4 +48,18 @@ func (cc *Charts) Append(chart Chart) error {
 	default:
 		return errors.New("Unknown chart type")
 	}
+}
+
+type Metric struct {
+	Path []string
+}
+
+func NewMetric(name string) (*Metric, error) {
+	return &Metric{
+		Path: strings.Split(name, "."),
+	}, nil
+}
+
+func (m *Metric) String() string {
+	return strings.Join(m.Path, ".")
 }

@@ -154,6 +154,13 @@ func ReadLineChart(data *json.RawMessage) (*LineChart, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	metric, err := NewMetric(chart.MetricName)
+	if err != nil {
+		return nil, err
+	}
+	chart.Metric = metric
+
 	return &chart, nil
 }
 
