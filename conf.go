@@ -50,9 +50,10 @@ type RawRow struct {
 }
 
 type RawItem struct {
-	Type string           `json:"type"`
-	Size int              `json:"size"`
-	Conf *json.RawMessage `json:"conf"`
+	Type  string           `json:"type"`
+	Title string           `json:"title"`
+	Size  int              `json:"size"`
+	Conf  *json.RawMessage `json:"conf"`
 }
 
 type Config struct {
@@ -110,9 +111,14 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 				return nil, err
 			}
 
+			title := item.Title
+			if len(item.Title) == 0 {
+				title = c.Title()
+			}
+
 			cols = append(cols, &Col{
 				ID:    c.ID(),
-				Title: c.Title(),
+				Title: title,
 				Size:  item.Size,
 			})
 		}
