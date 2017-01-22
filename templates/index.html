@@ -17,6 +17,7 @@
                 {{ range $index, $col := $row.Cols }}
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-{{$col.Size}}">
                     <div class="box">
+                        <div class="title">{{$col.Title}}</div>
                         <div id="{{$col.ID}}"></div>
                     </div>
                 </div>

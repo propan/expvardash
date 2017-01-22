@@ -70,8 +70,9 @@ type Row struct {
 }
 
 type Col struct {
-	ID   string
-	Size int
+	ID    string
+	Title string
+	Size  int
 }
 
 func (c *RawConfig) ParseConf() (*Config, error) {
@@ -110,8 +111,9 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 			}
 
 			cols = append(cols, &Col{
-				ID:   c.ID(),
-				Size: item.Size,
+				ID:    c.ID(),
+				Title: c.Title(),
+				Size:  item.Size,
 			})
 		}
 

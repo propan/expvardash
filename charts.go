@@ -13,6 +13,7 @@ const (
 type Chart interface {
 	ID() string
 	SetID(string)
+	Title() string
 }
 
 type LineChart struct {
@@ -28,6 +29,10 @@ func (c *LineChart) ID() string {
 
 func (c *LineChart) SetID(id string) {
 	c.cid = id
+}
+
+func (c *LineChart) Title() string {
+	return c.Metric.String()
 }
 
 type Charts struct {
