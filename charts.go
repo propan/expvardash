@@ -15,12 +15,15 @@ type Chart interface {
 	ID() string
 	SetID(string)
 	Title() string
+	HasLegend() bool
+	Series() []string
 }
 
 type LineChart struct {
 	cid        string   `json:"-"`
 	Metric     *Metric  `json:"-"`
 	MetricName string   `json:"metric"`
+	ShowLegend *bool    `json:"show_legend"`
 	Services   []string `json:"services"`
 }
 
@@ -34,6 +37,17 @@ func (c *LineChart) SetID(id string) {
 
 func (c *LineChart) Title() string {
 	return c.Metric.String()
+}
+
+func (c *LineChart) HasLegend() bool {
+	if c.ShowLegend == nil {
+		return true
+	}
+	return *c.ShowLegend
+}
+
+func (c *LineChart) Series() []string {
+	return c.Services
 }
 
 type Gauge struct {
@@ -54,6 +68,14 @@ func (g *Gauge) SetID(id string) {
 
 func (g *Gauge) Title() string {
 	return g.Metric.String()
+}
+
+func (g *Gauge) HasLegend() bool {
+	return false
+}
+
+func (g *Gauge) Series() []string {
+	return []string{}
 }
 
 type Charts struct {

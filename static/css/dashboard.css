@@ -26,7 +26,7 @@ body {
     background-color: #fcfcfc;
 }
 
-.box div {
+.box .title, .box .chart {
     margin: auto;
 }
 
@@ -44,4 +44,69 @@ body {
 .box .chart {
     background-color: #ffffff;
     height: 135px;
+}
+
+.legend {
+    margin: 10px auto;
+    text-align: center;
+    height: 11px;
+    font-size: 11px;
+    line-height: 11px;
+    text-transform: uppercase;
+}
+
+.legend div {
+    display: inline-block;
+    vertical-align: bottom;
+    color: #757575;
+    font-weight: 500;
+}
+
+.legend .legend-box {
+    width: 11px;
+    height: 11px;
+}
+
+.legend .legend-item {
+    padding: 0 4px;
+}
+
+.legend-box.category-0 {
+    background-color: #1f77b4;
+}
+
+.legend-box.category-1 {
+    background-color: #ff7f0e;
+}
+
+.legend-box.category-2 {
+    background-color: #2ca02c;
+}
+
+.legend-box.category-3 {
+    background-color: #d62728;
+}
+
+.legend-box.category-4 {
+    background-color: #9467bd;
+}
+
+.legend-box.category-5 {
+    background-color: #8c564b;
+}
+
+.legend-box.category-6 {
+    background-color: #e377c2;
+}
+
+.legend-box.category-7 {
+    background-color: #7f7f7f;
+}
+
+.legend-box.category-8 {
+    background-color: #bcbd22;
+}
+
+.legend-box.category-9 {
+    background-color: #17becf;
 }

@@ -20,6 +20,14 @@
                     <div class="box">
                         <div class="title">{{$col.Title}}</div>
                         <div id="{{$col.ID}}"></div>
+                        <div class="legend">
+                            {{ range $index, $name := $col.Series }}
+                            <div class="legend-item">
+                                <div class="legend-box category-{{ $index }}"></div>
+                                <div class="legend-name">{{ $name }}</div>
+                            </div>
+                            {{ end }}
+                        </div>
                     </div>
                 </div>
                 {{ end }}

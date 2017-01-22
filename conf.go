@@ -71,9 +71,11 @@ type Row struct {
 }
 
 type Col struct {
-	ID    string
-	Title string
-	Size  int
+	ID     string
+	Title  string
+	Size   int
+	Legend bool
+	Series []string
 }
 
 func (c *RawConfig) ParseConf() (*Config, error) {
@@ -87,12 +89,15 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 		},
 	}
 
+	defaultSeries := []string{}
+
 	for _, raw := range c.Services {
 		s, err := ReadService(raw)
 		if err != nil {
 			return nil, err
 		}
 		config.Services = append(config.Services, s)
+		defaultSeries = append(defaultSeries, s.Name)
 	}
 
 	for _, row := range c.Rows {
@@ -116,10 +121,20 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 				title = c.Title()
 			}
 
+			var series []string
+			if c.HasLegend() {
+				series = c.Series()
+				if len(series) == 0 {
+					series = defaultSeries
+				}
+			}
+
 			cols = append(cols, &Col{
-				ID:    c.ID(),
-				Title: title,
-				Size:  item.Size,
+				ID:     c.ID(),
+				Title:  title,
+				Size:   item.Size,
+				Legend: c.HasLegend(),
+				Series: series,
 			})
 		}
 
