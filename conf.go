@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
-	"fmt"
 )
 
 var Template = template.Must(template.ParseFiles("templates/index.html"))
@@ -36,7 +36,13 @@ func ReadConf(path string) (*RawConfig, error) {
 }
 
 type RawConfig struct {
-	Rows []RawRow `json:"rows"`
+	Services []RawService `json:"services"`
+	Rows     []RawRow     `json:"rows"`
+}
+
+type RawService struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
 }
 
 type RawRow struct {
@@ -50,8 +56,9 @@ type RawItem struct {
 }
 
 type Config struct {
-	Layout *Layout
-	Charts *Charts
+	Services []*Service
+	Layout   *Layout
+	Charts   *Charts
 }
 
 type Layout struct {
@@ -69,12 +76,21 @@ type Col struct {
 
 func (c *RawConfig) ParseConf() (*Config, error) {
 	config := &Config{
+		Services: []*Service{},
 		Layout: &Layout{
 			Rows: []*Row{},
 		},
 		Charts: &Charts{
 			LineCharts: []*LineChart{},
 		},
+	}
+
+	for _, raw := range c.Services {
+		s, err := ReadService(raw)
+		if err != nil {
+			return nil, err
+		}
+		config.Services = append(config.Services, s)
 	}
 
 	for _, row := range c.Rows {
@@ -94,7 +110,7 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 			}
 
 			cols = append(cols, &Col{
-				ID: c.ID(),
+				ID:   c.ID(),
 				Size: item.Size,
 			})
 		}
@@ -105,6 +121,18 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 	}
 
 	return config, nil
+}
+
+func ReadService(raw RawService) (*Service, error) {
+	url, err := ParseURL(raw.URL)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Service{
+		Name: raw.Name,
+		URL:  *url,
+	}, nil
 }
 
 func ReadChart(item RawItem) (Chart, error) {

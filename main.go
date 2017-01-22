@@ -3,21 +3,29 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"net/http"
 	"os"
-	"github.com/gorilla/websocket"
+	"time"
 )
 
 var upgrader = websocket.Upgrader{}
 
 var (
-	port = flag.Int("p", 4444, "Dashboard HTTP port")
+	interval  = flag.Duration("i", 5*time.Second, "Polling interval: 5s, 1m")
+	port      = flag.Int("p", 4444, "Dashboard HTTP port")
 	dashboard = flag.String("d", "", "Dashboard configuration fail")
 )
 
 func main() {
 	flag.Usage = Usage
 	flag.Parse()
+
+	if *interval <= 0 {
+		fmt.Fprintln(os.Stderr, "Invalid polling interval.")
+		Usage()
+		os.Exit(1)
+	}
 
 	// Load configuration file
 	conf, err := LoadConf(*dashboard)
@@ -29,6 +37,17 @@ func main() {
 	// Start handler for web-socket connections
 	hub := NewHub()
 	go hub.Start()
+
+	fetcher := NewFetcher()
+
+	crawler := &Crawler{
+		interval: *interval,
+		fetcher:  fetcher,
+		hub:      hub,
+		charts:   conf.Charts,
+		services: conf.Services,
+	}
+	go crawler.Start()
 
 	err = ListenAndServe(fmt.Sprintf(":%d", *port), hub, conf.Layout)
 	if err != nil {
@@ -88,7 +107,8 @@ func Usage() {
 	fmt.Fprintf(os.Stderr, `
 Examples:
 	%s -dashboard=dashboard.json
+	%s -dashboard=dashboard.json -i=10s
 
 For more details and docs, see README: http://github.com/propan/expvardash
-`, progname)
+`, progname, progname)
 }

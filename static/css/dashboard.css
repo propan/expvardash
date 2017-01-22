@@ -17,6 +17,11 @@
 /* Dashboard Styles */
 
 .box {
-    background-color: #e4e4e4;
+    background-color: #f9f9f9;
     height: 150px;
+}
+
+.chart {
+    background-color: #ffffff;
+    height: 100%;
 }

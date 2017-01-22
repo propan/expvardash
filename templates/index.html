@@ -17,7 +17,7 @@
                 {{ range $index, $col := $row.Cols }}
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-{{$col.Size}}">
                     <div class="box">
-                        <div id="{{$col.ID}}" class="chart"></div>
+                        <div id="{{$col.ID}}"></div>
                     </div>
                 </div>
                 {{ end }}
@@ -25,9 +25,29 @@
             {{ end }}
         </div>
         <script>
+            var charts = {};
             var ws = new WebSocket("ws://localhost:4444/updates");
-            ws.onmessage = function() {
-                // TODO: handle process messages
+            ws.onmessage = function(e) {
+                var updates = JSON.parse(e.data);
+                updates.lc.forEach(function(update) {
+                    var c = charts[update.i];
+                    if (!c) {
+                        var series = [];
+                        for (i = 0; i < update.p.length; i++) {
+                            series.push({
+                                label: 'Series ' + i,
+                                values: []
+                            });
+                        }
+                        c = $('#'+update.i).addClass('chart epoch line-chart').epoch({
+                            type: 'time.line',
+                            axes: ['left', 'bottom'],
+                            data: series,
+                        });
+                        charts[update.id] = c;
+                    }
+                    c.push(update.p);
+                });
             };
             ws.onerror = function() {
                 // TODO: show error message
