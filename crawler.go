@@ -17,7 +17,13 @@ type LineChartUpdate struct {
 	Points []LinePoint `json:"p"`
 }
 
+type GaugeUpdate struct {
+	ID    string `json:"i"`
+	Value int64  `json:"v"`
+}
+
 type ChartsUpdates struct {
+	Gauges     []*GaugeUpdate     `json:"g"`
 	LineCharts []*LineChartUpdate `json:"lc"`
 }
 
@@ -84,10 +90,18 @@ func (c *Crawler) fetchAll() map[string]*Expvars {
 
 func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *ChartsUpdates {
 	u := &ChartsUpdates{
+		Gauges:     []*GaugeUpdate{},
 		LineCharts: []*LineChartUpdate{},
 	}
 
 	now := time.Now().Unix()
+
+	for _, g := range c.charts.Gauges {
+		u.Gauges = append(u.Gauges, &GaugeUpdate{
+			ID:    g.ID(),
+			Value: GaugeValue(g.Metric, g.MaxValue, vars[g.Service]),
+		})
+	}
 
 	for _, ch := range c.charts.LineCharts {
 		lu := &LineChartUpdate{
@@ -115,6 +129,21 @@ func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *ChartsUpdates {
 	return u
 }
 
+func GaugeValue(m *Metric, max int64, vars *Expvars) int64 {
+	if vars == nil {
+		return 0
+	}
+
+	v := ReadMetric(m, vars)
+	if value, ok := v.(int64); ok {
+		return value / max
+	}
+
+	fmt.Printf("%s: usage of %s with gauge is not supported\n", m, reflect.TypeOf(v))
+
+	return 0
+}
+
 func LineChartValue(m *Metric, vars *Expvars) int64 {
 	if vars == nil {
 		return 0
@@ -125,7 +154,7 @@ func LineChartValue(m *Metric, vars *Expvars) int64 {
 		return value
 	}
 
-	fmt.Printf("%s: usage of %s with line-chart is not supported\n", m.Path, reflect.TypeOf(v))
+	fmt.Printf("%s: usage of %s with line-chart is not supported\n", m, reflect.TypeOf(v))
 
 	return 0
 }
@@ -133,7 +162,7 @@ func LineChartValue(m *Metric, vars *Expvars) int64 {
 func ReadMetric(m *Metric, vars *Expvars) interface{} {
 	value, err := vars.GetValue(m.Path...)
 	if err != nil {
-		return 0
+		return int64(0)
 	}
 
 	if v, err := value.Int64(); err == nil {

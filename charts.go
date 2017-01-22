@@ -1,12 +1,13 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 )
 
 const (
+	GaugeType     = "Gauge"
 	LineChartType = "LineChart"
 )
 
@@ -18,8 +19,8 @@ type Chart interface {
 
 type LineChart struct {
 	cid        string   `json:"-"`
-	MetricName string   `json:"metric"`
 	Metric     *Metric  `json:"-"`
+	MetricName string   `json:"metric"`
 	Services   []string `json:"services"`
 }
 
@@ -35,8 +36,29 @@ func (c *LineChart) Title() string {
 	return c.Metric.String()
 }
 
+type Gauge struct {
+	cid        string  `json:"-"`
+	Metric     *Metric `json:"-"`
+	MetricName string  `json:"metric"`
+	Service    string  `json:"service"`
+	MaxValue   int64   `json:"max"`
+}
+
+func (g *Gauge) ID() string {
+	return g.cid
+}
+
+func (g *Gauge) SetID(id string) {
+	g.cid = id
+}
+
+func (g *Gauge) Title() string {
+	return g.Metric.String()
+}
+
 type Charts struct {
 	nextID     int
+	Gauges     []*Gauge
 	LineCharts []*LineChart
 }
 
@@ -50,8 +72,11 @@ func (cc *Charts) Append(chart Chart) error {
 	case *LineChart:
 		cc.LineCharts = append(cc.LineCharts, c)
 		return nil
+	case *Gauge:
+		cc.Gauges = append(cc.Gauges, c)
+		return nil
 	default:
-		return errors.New("Unknown chart type")
+		return fmt.Errorf("Unknown chart type: %s", reflect.TypeOf(chart))
 	}
 }
 

@@ -145,6 +145,8 @@ func ReadChart(item RawItem) (Chart, error) {
 	switch item.Type {
 	case LineChartType:
 		return ReadLineChart(item.Conf)
+	case GaugeType:
+		return ReadGauge(item.Conf)
 	default:
 		return nil, fmt.Errorf("Unknown chart type: %s", item.Type)
 	}
@@ -152,6 +154,22 @@ func ReadChart(item RawItem) (Chart, error) {
 
 func ReadLineChart(data *json.RawMessage) (*LineChart, error) {
 	var chart LineChart
+	err := json.Unmarshal(*data, &chart)
+	if err != nil {
+		return nil, err
+	}
+
+	metric, err := NewMetric(chart.MetricName)
+	if err != nil {
+		return nil, err
+	}
+	chart.Metric = metric
+
+	return &chart, nil
+}
+
+func ReadGauge(data *json.RawMessage) (*Gauge, error) {
+	var chart Gauge
 	err := json.Unmarshal(*data, &chart)
 	if err != nil {
 		return nil, err

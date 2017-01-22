@@ -45,9 +45,19 @@
                             axes: ['left', 'bottom'],
                             data: series,
                         });
-                        charts[update.id] = c;
+                        charts[update.i] = c;
                     }
                     c.push(update.p);
+                });
+                updates.g.forEach(function(update) {
+                    var c = charts[update.i];
+                    if (!c) {
+                        c = $('#'+update.i).addClass('chart epoch gauge-small').epoch({
+                            type: 'time.gauge'
+                        });
+                        charts[update.i] = c;
+                    }
+                    c.update(update.v);
                 });
             };
             ws.onerror = function() {
