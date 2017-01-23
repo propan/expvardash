@@ -15,7 +15,7 @@ var upgrader = websocket.Upgrader{}
 var (
 	interval  = flag.Duration("i", 5*time.Second, "Polling interval: 5s, 1m")
 	port      = flag.Int("p", 4444, "Dashboard HTTP port")
-	dashboard = flag.String("d", "", "Dashboard configuration fail")
+	dashboard = flag.String("d", "", "Dashboard configuration file")
 )
 
 func main() {
