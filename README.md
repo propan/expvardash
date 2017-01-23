@@ -2,6 +2,10 @@
 
 a monitoring system for Go applications using [expvar](https://golang.org/pkg/expvar/) (/debug/vars)
 
+# Example
+
+![example dashboard](https://github.com/propan/expvardash/raw/master/screenshot.png)
+
 # Usage
 
 TBD
