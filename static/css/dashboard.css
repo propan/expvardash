@@ -26,13 +26,12 @@ body {
     background-color: #fcfcfc;
 }
 
-.box .title, .box .chart {
+.box .title, .box .widget {
     margin: auto;
 }
 
 .box .title {
     color: #4a4a4a;
-    background-color: #fff;
     text-align: center;
     margin-bottom: 5px;
     margin-top: 10px;
@@ -41,9 +40,19 @@ body {
     text-transform: uppercase;
 }
 
-.box .chart {
-    background-color: #ffffff;
+.box .widget {
     height: 135px;
+}
+
+.box .text-widget {
+    display: flex;
+    align-items: flex-end;
+}
+
+.box .text-widget .value {
+    font-size: 46px;
+    text-align: center;
+    flex: 1;
 }
 
 .legend {

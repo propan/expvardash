@@ -19,7 +19,7 @@
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-{{$col.Size}}">
                     <div class="box">
                         <div class="title">{{$col.Title}}</div>
-                        <div id="{{$col.ID}}"></div>
+                        <div id="{{$col.ID}}" class="widget"></div>
                         <div class="legend">
                             {{ range $index, $name := $col.Series }}
                             <div class="legend-item">
@@ -35,12 +35,12 @@
             {{ end }}
         </div>
         <script>
-            var charts = {};
+            var widgets = {};
             var ws = new WebSocket("ws://localhost:4444/updates");
             ws.onmessage = function(e) {
                 var updates = JSON.parse(e.data);
                 updates.lc.forEach(function(update) {
-                    var c = charts[update.i];
+                    var c = widgets[update.i];
                     if (!c) {
                         var series = [];
                         for (i = 0; i < update.p.length; i++) {
@@ -49,24 +49,35 @@
                                 values: []
                             });
                         }
-                        c = $('#'+update.i).addClass('chart epoch line-chart').epoch({
+                        c = $('#'+update.i).addClass('epoch line-chart').epoch({
                             type: 'time.line',
                             axes: ['left', 'bottom'],
                             data: series,
                         });
-                        charts[update.i] = c;
+                        widgets[update.i] = c;
                     }
                     c.push(update.p);
                 });
                 updates.g.forEach(function(update) {
-                    var c = charts[update.i];
+                    var c = widgets[update.i];
                     if (!c) {
-                        c = $('#'+update.i).addClass('chart epoch gauge-small').epoch({
+                        c = $('#'+update.i).addClass('epoch gauge-small').epoch({
                             type: 'time.gauge'
                         });
-                        charts[update.i] = c;
+                        widgets[update.i] = c;
                     }
                     c.update(update.v);
+                });
+
+                updates.t.forEach(function(update) {
+                    var c = widgets[update.i];
+                    if (!c) {
+                        c = $("<div class='value'></div>");
+                        widgets[update.i] = c;
+
+                        $('#'+update.i).addClass('text-widget').append(c);
+                    }
+                    c.text(update.v);
                 });
             };
             ws.onerror = function() {

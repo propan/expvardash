@@ -22,9 +22,15 @@ type GaugeUpdate struct {
 	Value int64  `json:"v"`
 }
 
-type ChartsUpdates struct {
+type TextUpdate struct {
+	ID    string `json:"i"`
+	Value string `json:"v"`
+}
+
+type WidgetsUpdates struct {
 	Gauges     []*GaugeUpdate     `json:"g"`
 	LineCharts []*LineChartUpdate `json:"lc"`
+	Texts      []*TextUpdate      `json:"t"`
 }
 
 type Crawler struct {
@@ -32,7 +38,7 @@ type Crawler struct {
 	fetcher  *Fetcher
 	hub      *Hub
 	services []*Service
-	charts   *Charts
+	widgets  *Widgets
 }
 
 type result struct {
@@ -88,22 +94,23 @@ func (c *Crawler) fetchAll() map[string]*Expvars {
 	return vars
 }
 
-func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *ChartsUpdates {
-	u := &ChartsUpdates{
+func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *WidgetsUpdates {
+	u := &WidgetsUpdates{
 		Gauges:     []*GaugeUpdate{},
 		LineCharts: []*LineChartUpdate{},
+		Texts:      []*TextUpdate{},
 	}
 
 	now := time.Now().Unix()
 
-	for _, g := range c.charts.Gauges {
+	for _, g := range c.widgets.Gauges {
 		u.Gauges = append(u.Gauges, &GaugeUpdate{
 			ID:    g.ID(),
 			Value: GaugeValue(g.Metric, g.MaxValue, vars[g.Service]),
 		})
 	}
 
-	for _, ch := range c.charts.LineCharts {
+	for _, ch := range c.widgets.LineCharts {
 		lu := &LineChartUpdate{
 			ID:     ch.ID(),
 			Points: []LinePoint{},
@@ -124,6 +131,13 @@ func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *ChartsUpdates {
 			}
 		}
 		u.LineCharts = append(u.LineCharts, lu)
+	}
+
+	for _, t := range c.widgets.Texts {
+		u.Texts = append(u.Texts, &TextUpdate{
+			ID:    t.ID(),
+			Value: TextValue(t.Metric, vars[t.Service]),
+		})
 	}
 
 	return u
@@ -157,6 +171,21 @@ func LineChartValue(m *Metric, vars *Expvars) int64 {
 	fmt.Printf("%s: usage of %s with line-chart is not supported\n", m, reflect.TypeOf(v))
 
 	return 0
+}
+
+func TextValue(m *Metric, vars *Expvars) string {
+	if vars == nil {
+		return "N/A"
+	}
+
+	v := ReadMetric(m, vars)
+	if value, ok := v.(int64); ok {
+		return fmt.Sprintf("%d", value)
+	}
+
+	fmt.Printf("%s: usage of %s with gauge is not supported\n", m, reflect.TypeOf(v))
+
+	return "N/A"
 }
 
 func ReadMetric(m *Metric, vars *Expvars) interface{} {

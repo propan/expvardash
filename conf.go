@@ -59,7 +59,7 @@ type RawItem struct {
 type Config struct {
 	Services []*Service
 	Layout   *Layout
-	Charts   *Charts
+	Widgets  *Widgets
 }
 
 type Layout struct {
@@ -84,9 +84,7 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 		Layout: &Layout{
 			Rows: []*Row{},
 		},
-		Charts: &Charts{
-			LineCharts: []*LineChart{},
-		},
+		Widgets: &Widgets{},
 	}
 
 	defaultSeries := []string{}
@@ -109,9 +107,9 @@ func (c *RawConfig) ParseConf() (*Config, error) {
 				return nil, err
 			}
 
-			c.SetID(config.Charts.NextID())
+			c.SetID(config.Widgets.NextID())
 
-			err = config.Charts.Append(c)
+			err = config.Widgets.Append(c)
 			if err != nil {
 				return nil, err
 			}
@@ -158,51 +156,69 @@ func ReadService(raw RawService) (*Service, error) {
 	}, nil
 }
 
-func ReadChart(item RawItem) (Chart, error) {
+func ReadChart(item RawItem) (Widget, error) {
 	if item.Conf == nil {
 		return nil, fmt.Errorf("Missing configuration for: %s", item.Type)
 	}
 
 	switch item.Type {
-	case LineChartType:
-		return ReadLineChart(item.Conf)
 	case GaugeType:
 		return ReadGauge(item.Conf)
+	case LineChartType:
+		return ReadLineChart(item.Conf)
+	case TextType:
+		return ReadText(item.Conf)
 	default:
-		return nil, fmt.Errorf("Unknown chart type: %s", item.Type)
+		return nil, fmt.Errorf("Unknown widget type: %s", item.Type)
 	}
 }
 
 func ReadLineChart(data *json.RawMessage) (*LineChart, error) {
-	var chart LineChart
-	err := json.Unmarshal(*data, &chart)
+	var widget LineChart
+	err := json.Unmarshal(*data, &widget)
 	if err != nil {
 		return nil, err
 	}
 
-	metric, err := NewMetric(chart.MetricName)
+	metric, err := NewMetric(widget.MetricName)
 	if err != nil {
 		return nil, err
 	}
-	chart.Metric = metric
+	widget.Metric = metric
 
-	return &chart, nil
+	return &widget, nil
 }
 
 func ReadGauge(data *json.RawMessage) (*Gauge, error) {
-	var chart Gauge
-	err := json.Unmarshal(*data, &chart)
+	var widget Gauge
+	err := json.Unmarshal(*data, &widget)
 	if err != nil {
 		return nil, err
 	}
 
-	metric, err := NewMetric(chart.MetricName)
+	metric, err := NewMetric(widget.MetricName)
 	if err != nil {
 		return nil, err
 	}
-	chart.Metric = metric
+	widget.Metric = metric
 
-	return &chart, nil
+	return &widget, nil
+}
+
+func ReadText(data *json.RawMessage) (*Text, error) {
+	var widget Text
+	err := json.Unmarshal(*data, &widget)
+	if err != nil {
+		return nil, err
+	}
+
+	metric, err := NewMetric(widget.MetricName)
+	if err != nil {
+		return nil, err
+	}
+	widget.Metric = metric
+
+	return &widget, nil
 }
 
 func (l *Layout) Render() (string, error) {

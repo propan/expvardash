@@ -45,7 +45,7 @@ func main() {
 		interval: *interval,
 		fetcher:  fetcher,
 		hub:      hub,
-		charts:   conf.Charts,
+		widgets:  conf.Widgets,
 		services: conf.Services,
 	}
 	go crawler.Start()

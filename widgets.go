@@ -9,9 +9,10 @@ import (
 const (
 	GaugeType     = "Gauge"
 	LineChartType = "LineChart"
+	TextType      = "Text"
 )
 
-type Chart interface {
+type Widget interface {
 	ID() string
 	SetID(string)
 	Title() string
@@ -78,27 +79,58 @@ func (g *Gauge) Series() []string {
 	return []string{}
 }
 
-type Charts struct {
+type Text struct {
+	cid        string  `json:"-"`
+	Metric     *Metric `json:"-"`
+	MetricName string  `json:"metric"`
+	Service    string  `json:"service"`
+}
+
+func (t *Text) ID() string {
+	return t.cid
+}
+
+func (t *Text) SetID(id string) {
+	t.cid = id
+}
+
+func (t *Text) Title() string {
+	return t.Metric.String()
+}
+
+func (t *Text) HasLegend() bool {
+	return false
+}
+
+func (t *Text) Series() []string {
+	return []string{}
+}
+
+type Widgets struct {
 	nextID     int
 	Gauges     []*Gauge
 	LineCharts []*LineChart
+	Texts      []*Text
 }
 
-func (cc *Charts) NextID() string {
-	cc.nextID++
-	return fmt.Sprintf("c%d", cc.nextID)
+func (ww *Widgets) NextID() string {
+	ww.nextID++
+	return fmt.Sprintf("c%d", ww.nextID)
 }
 
-func (cc *Charts) Append(chart Chart) error {
-	switch c := chart.(type) {
-	case *LineChart:
-		cc.LineCharts = append(cc.LineCharts, c)
-		return nil
+func (ww *Widgets) Append(widget Widget) error {
+	switch c := widget.(type) {
 	case *Gauge:
-		cc.Gauges = append(cc.Gauges, c)
+		ww.Gauges = append(ww.Gauges, c)
+		return nil
+	case *LineChart:
+		ww.LineCharts = append(ww.LineCharts, c)
+		return nil
+	case *Text:
+		ww.Texts = append(ww.Texts, c)
 		return nil
 	default:
-		return fmt.Errorf("Unknown chart type: %s", reflect.TypeOf(chart))
+		return fmt.Errorf("Unknown widget type: %s", reflect.TypeOf(widget))
 	}
 }
 
