@@ -73,7 +73,6 @@ func (c *Crawler) fetchAll() map[string]*Expvars {
 			vars, err := c.fetcher.Fetch(service.URL)
 			if err != nil {
 				fmt.Printf("Failed to crawl '%s': %s\n", service.Name, err)
-				return
 			}
 			resCh <- result{service: service.Name, vars: vars}
 		}()
@@ -87,7 +86,9 @@ func (c *Crawler) fetchAll() map[string]*Expvars {
 			fmt.Println("Timed out waiting for all crawling results")
 			return vars
 		case r := <-resCh:
-			vars[r.service] = r.vars
+			if r.vars != nil {
+				vars[r.service] = r.vars
+			}
 		}
 	}
 
