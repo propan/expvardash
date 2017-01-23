@@ -18,8 +18,8 @@ type LineChartUpdate struct {
 }
 
 type GaugeUpdate struct {
-	ID    string `json:"i"`
-	Value int64  `json:"v"`
+	ID    string  `json:"i"`
+	Value float64 `json:"v"`
 }
 
 type TextUpdate struct {
@@ -143,19 +143,22 @@ func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *WidgetsUpdates {
 	return u
 }
 
-func GaugeValue(m *Metric, max int64, vars *Expvars) int64 {
+func GaugeValue(m *Metric, max int64, vars *Expvars) float64 {
 	if vars == nil {
-		return 0
+		return 0.0
 	}
 
 	v := ReadMetric(m, vars)
 	if value, ok := v.(int64); ok {
-		return value / max
+		return float64(value) / float64(max)
+	}
+	if value, ok := v.(float64); ok {
+		return value / float64(max)
 	}
 
 	fmt.Printf("%s: usage of %s with gauge is not supported\n", m, reflect.TypeOf(v))
 
-	return 0
+	return 0.0
 }
 
 func LineChartValue(m *Metric, vars *Expvars) int64 {

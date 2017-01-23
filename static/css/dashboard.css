@@ -50,6 +50,7 @@ body {
 }
 
 .box .text-widget .value {
+    color: #1f77b4;
     font-size: 46px;
     text-align: center;
     flex: 1;
