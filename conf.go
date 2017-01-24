@@ -221,10 +221,10 @@ func ReadText(data *json.RawMessage) (*Text, error) {
 	return &widget, nil
 }
 
-func (l *Layout) Render() (string, error) {
+func (l *Layout) Render(data map[string]interface{}) (string, error) {
 	buf := new(bytes.Buffer)
 
-	err := l.RenderTo(buf)
+	err := l.RenderTo(buf, data)
 	if err != nil {
 		return "", err
 	}
@@ -232,6 +232,10 @@ func (l *Layout) Render() (string, error) {
 	return buf.String(), nil
 }
 
-func (l *Layout) RenderTo(w io.Writer) error {
-	return Template.Execute(w, *l)
+func (l *Layout) RenderTo(w io.Writer, data map[string]interface{}) error {
+	d := map[string]interface{}{"Layout": *l}
+	for k, v := range data {
+		d[k] = v
+	}
+	return Template.Execute(w, d)
 }

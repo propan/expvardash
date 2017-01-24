@@ -50,19 +50,21 @@ func main() {
 	}
 	go crawler.Start()
 
-	err = ListenAndServe(fmt.Sprintf(":%d", *port), hub, conf.Layout)
+	err = ListenAndServe(*port, hub, conf.Layout)
 	if err != nil {
 		fmt.Println("Could not start HTTP server:", err)
 		os.Exit(1)
 	}
 }
 
-func ListenAndServe(addr string, hub *Hub, layout *Layout) error {
+func ListenAndServe(port int, hub *Hub, layout *Layout) error {
+	addr := fmt.Sprintf(":%d", port)
+
 	fmt.Printf("Starting HTTP server on localhost%s\n", addr)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		err := layout.RenderTo(w)
+		err := layout.RenderTo(w, map[string]interface{}{"Port": port})
 		if err != nil {
 			fmt.Println("Error rendering response:", err)
 		}

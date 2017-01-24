@@ -13,7 +13,7 @@
     </head>
     <body>
         <div class="container">
-            {{ range $index, $row := .Rows }}
+            {{ range $index, $row := .Layout.Rows }}
             <div class="row">
                 {{ range $index, $col := $row.Cols }}
                 <div class="col-xs-12 col-sm-6 col-md-4 col-lg-{{$col.Size}}">
@@ -36,7 +36,7 @@
         </div>
         <script>
             var widgets = {};
-            var ws = new WebSocket("ws://localhost:4444/updates");
+            var ws = new WebSocket("ws://localhost:{{ .Port }}/updates");
             ws.onmessage = function(e) {
                 var updates = JSON.parse(e.data);
                 updates.lc.forEach(function(update) {
