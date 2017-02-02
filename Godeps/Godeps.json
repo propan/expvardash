@@ -12,6 +12,10 @@
 			"Rev": "962e09b85496e2e158eec1567fb4c826ce3d55d1"
 		},
 		{
+			"ImportPath": "github.com/elazarl/go-bindata-assetfs",
+			"Rev": "9a6736ed45b44bf3835afeebb3034b57ed329f3e"
+		},
+		{
 			"ImportPath": "github.com/gorilla/websocket",
 			"Comment": "v1.1.0-10-gbb547c6",
 			"Rev": "bb547c6c5c59732c29a3266d7125a84f6c3fce32"
