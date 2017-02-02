@@ -1,7 +1,10 @@
 PKGS = $(shell go list ./... | grep -v /vendor/)
 
+fmt:
+	find . -type f -name '*.go' -not -path "./vendor/*" -exec goimports -w -l {} +
+
 godep:
 	godep save $(PKGS)
 
-fmt:
-	find . -type f -name '*.go' -not -path "./vendor/*" -exec goimports -w -l {} +
+bundle:
+	go-bindata -o resources.go templates static/...

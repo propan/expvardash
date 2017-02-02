@@ -7,6 +7,9 @@ import (
 	"os"
 	"time"
 
+	"html/template"
+
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/gorilla/websocket"
 )
 
@@ -16,6 +19,7 @@ var (
 	interval  = flag.Duration("i", 5*time.Second, "Polling interval: 5s, 1m")
 	port      = flag.Int("p", 4444, "Dashboard HTTP port")
 	dashboard = flag.String("d", "", "Dashboard configuration file")
+	fs        = flag.Bool("fs", false, "Serve static files from file system")
 )
 
 func main() {
@@ -50,26 +54,53 @@ func main() {
 	}
 	go crawler.Start()
 
-	err = ListenAndServe(*port, hub, conf.Layout)
+	err = ListenAndServe(*port, hub, conf.Layout, *fs)
 	if err != nil {
 		fmt.Println("Could not start HTTP server:", err)
 		os.Exit(1)
 	}
 }
 
-func ListenAndServe(port int, hub *Hub, layout *Layout) error {
+func LoadTemplate(fsMode bool) (*template.Template, error) {
+	if fsMode {
+		return template.ParseFiles("templates/index.html")
+	} else {
+		data, err := Asset("templates/index.html")
+		if err != nil {
+			return nil, err
+		}
+
+		return template.New("templates/index.html").Parse(string(data))
+	}
+}
+func ListenAndServe(port int, hub *Hub, layout *Layout, fsMode bool) error {
+	t, err := LoadTemplate(fsMode)
+	if err != nil {
+		return err
+	}
+
 	addr := fmt.Sprintf(":%d", port)
 
 	fmt.Printf("Starting HTTP server on localhost%s\n", addr)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		err := layout.RenderTo(w, map[string]interface{}{"Port": port})
+
+		err := t.Execute(w, map[string]interface{}{"Port": port, "Layout": *layout})
 		if err != nil {
 			fmt.Println("Error rendering response:", err)
 		}
 	})
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	if fsMode {
+		http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	} else {
+		http.Handle("/static/", http.FileServer(&assetfs.AssetFS{
+			Asset:     Asset,
+			AssetDir:  AssetDir,
+			AssetInfo: AssetInfo,
+			Prefix:    "",
+		}))
+	}
 
 	http.HandleFunc("/updates", func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)

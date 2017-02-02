@@ -1,15 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"html/template"
-	"io"
 	"io/ioutil"
 )
-
-var Template = template.Must(template.ParseFiles("templates/index.html"))
 
 func LoadConf(path string) (*Config, error) {
 	raw, err := ReadConf(path)
@@ -219,23 +214,4 @@ func ReadText(data *json.RawMessage) (*Text, error) {
 	widget.Metric = metric
 
 	return &widget, nil
-}
-
-func (l *Layout) Render(data map[string]interface{}) (string, error) {
-	buf := new(bytes.Buffer)
-
-	err := l.RenderTo(buf, data)
-	if err != nil {
-		return "", err
-	}
-
-	return buf.String(), nil
-}
-
-func (l *Layout) RenderTo(w io.Writer, data map[string]interface{}) error {
-	d := map[string]interface{}{"Layout": *l}
-	for k, v := range data {
-		d[k] = v
-	}
-	return Template.Execute(w, d)
 }
