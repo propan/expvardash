@@ -1,0 +1,20 @@
+{
+	"ImportPath": "github.com/propan/expvardash",
+	"GoVersion": "go1.7",
+	"GodepVersion": "v79",
+	"Packages": [
+		"github.com/propan/expvardash"
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/antonholmquist/jason",
+			"Comment": "v1.0.0-16-g962e09b",
+			"Rev": "962e09b85496e2e158eec1567fb4c826ce3d55d1"
+		},
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Comment": "v1.1.0-10-gbb547c6",
+			"Rev": "bb547c6c5c59732c29a3266d7125a84f6c3fce32"
+		}
+	]
+}
