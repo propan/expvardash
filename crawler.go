@@ -102,7 +102,7 @@ func (c *Crawler) ExtractUpdates(vars map[string]*Expvars) *WidgetsUpdates {
 		Texts:      []*TextUpdate{},
 	}
 
-	now := time.Now().Unix()
+	now := Now().Unix()
 
 	for _, g := range c.widgets.Gauges {
 		u.Gauges = append(u.Gauges, &GaugeUpdate{
@@ -185,6 +185,12 @@ func TextValue(m *Metric, vars *Expvars) string {
 	v := ReadMetric(m, vars)
 	if value, ok := v.(int64); ok {
 		return fmt.Sprintf("%d", value)
+	} else if value, ok := v.(float64); ok {
+		return fmt.Sprintf("%.2f", value)
+	} else if value, ok := v.(bool); ok {
+		return fmt.Sprintf("%t", value)
+	} else if value, ok := v.(string); ok {
+		return value
 	}
 
 	fmt.Printf("%s: usage of %s with gauge is not supported\n", m, reflect.TypeOf(v))
@@ -195,7 +201,7 @@ func TextValue(m *Metric, vars *Expvars) string {
 func ReadMetric(m *Metric, vars *Expvars) interface{} {
 	value, err := vars.GetValue(m.Path...)
 	if err != nil {
-		return int64(0)
+		return nil
 	}
 
 	if v, err := value.Int64(); err == nil {

@@ -13,6 +13,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var Now = time.Now
+
 var upgrader = websocket.Upgrader{}
 
 var (

@@ -8,3 +8,6 @@ godep:
 
 bundle:
 	go-bindata -o resources.go templates static/...
+
+test:
+	go test -race -cover $(PKGS)
