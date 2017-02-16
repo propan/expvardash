@@ -13,19 +13,23 @@ type Expvars struct {
 	*jason.Object
 }
 
-type Fetcher struct {
+type Fetcher interface {
+	Fetch(url url.URL) (*Expvars, error)
+}
+
+type fetcher struct {
 	client *http.Client
 }
 
-func NewFetcher() *Fetcher {
-	return &Fetcher{
+func NewFetcher() Fetcher {
+	return &fetcher{
 		client: &http.Client{
 			Timeout: time.Second,
 		},
 	}
 }
 
-func (f *Fetcher) Fetch(url url.URL) (*Expvars, error) {
+func (f *fetcher) Fetch(url url.URL) (*Expvars, error) {
 	req, err := http.NewRequest(http.MethodGet, url.String(), nil)
 	if err != nil {
 		return nil, err

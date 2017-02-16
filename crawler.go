@@ -35,10 +35,11 @@ type WidgetsUpdates struct {
 
 type Crawler struct {
 	interval time.Duration
-	fetcher  *Fetcher
+	fetcher  Fetcher
 	hub      *Hub
 	services []*Service
 	widgets  *Widgets
+	done     chan struct{}
 }
 
 type result struct {
@@ -47,19 +48,25 @@ type result struct {
 }
 
 func (c *Crawler) Start() {
-	tick := time.NewTicker(c.interval)
 	for {
-		<-tick.C
+		select {
+		case <-time.After(c.interval):
+			updates := c.ExtractUpdates(c.fetchAll())
+			data, err := json.Marshal(updates)
+			if err != nil {
+				fmt.Println("Error serializing response:", err)
+				continue
+			}
 
-		updates := c.ExtractUpdates(c.fetchAll())
-		data, err := json.Marshal(updates)
-		if err != nil {
-			fmt.Println("Error serializing response:", err)
-			continue
+			c.hub.dataCh <- data
+		case <-c.done:
+			return
 		}
-
-		c.hub.dataCh <- data
 	}
+}
+
+func (c *Crawler) Stop() {
+	c.done <- struct{}{}
 }
 
 func (c *Crawler) fetchAll() map[string]*Expvars {

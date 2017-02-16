@@ -5,6 +5,9 @@ import (
 
 	"time"
 
+	"errors"
+	"net/url"
+
 	"github.com/antonholmquist/jason"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,15 +17,203 @@ func NewSafeMetric(name string) *Metric {
 	return m
 }
 
-func TestCrawler_ExtractUpdates(t *testing.T) {
+func WaitTime(ch chan bool, timeout time.Duration) error {
+	select {
+	case <-ch:
+		return nil
+	case <-time.After(timeout):
+	}
+	return errors.New("timeout")
+}
+
+type mockFetcher struct {
+	timeout time.Duration
+	err     error
+	vars    *Expvars
+}
+
+func (f *mockFetcher) Fetch(url url.URL) (*Expvars, error) {
+	if f.timeout.Nanoseconds() > 0 {
+		time.Sleep(f.timeout)
+	}
+	return f.vars, f.err
+}
+
+func TestCrawler_Start_Success(t *testing.T) {
 	Now = func() time.Time {
-		t, _ := time.Parse("06/11/05, 02:04PM", "01/24/13, 11:27PM")
+		t, _ := time.Parse("2006-Jan-02", "2013-Feb-03")
 		return t
 	}
 
 	defer func() {
 		Now = time.Now
+	}()
 
+	o, err := jason.NewObjectFromBytes([]byte(`{"gauge": {"metric": 800}, "process": {"text": "text 1"}, "memstats": {"alloc": 123}}`))
+	assert.NoError(t, err)
+
+	crawler := &Crawler{
+		interval: 200 * time.Millisecond,
+		fetcher: &mockFetcher{
+			vars: &Expvars{Object: o},
+		},
+		hub: &Hub{
+			dataCh: make(chan []byte, 1),
+		},
+		services: []*Service{
+			{
+				Name: "service1",
+			},
+		},
+		widgets: &Widgets{
+			Gauges: []*Gauge{
+				{
+					cid:      "g1",
+					Metric:   NewSafeMetric("gauge.metric"),
+					MaxValue: 1000,
+					Service:  "service1",
+				},
+			},
+			LineCharts: []*LineChart{
+				{
+					cid:    "lc1",
+					Metric: NewSafeMetric("memstats.alloc"),
+				},
+			},
+			Texts: []*Text{
+				{
+					cid:     "t1",
+					Metric:  NewSafeMetric("process.text"),
+					Service: "service1",
+				},
+			},
+		},
+		done: make(chan struct{}, 1),
+	}
+
+	go crawler.Start()
+	defer crawler.Stop()
+
+	ch := make(chan bool)
+
+	go func() {
+		assert.Equal(t, `{"g":[{"i":"g1","v":0.8}],"lc":[{"i":"lc1","p":[{"time":1359849600,"y":123}]}],"t":[{"i":"t1","v":"text 1"}]}`, string(<-crawler.hub.dataCh))
+
+		ch <- true
+	}()
+
+	if err := WaitTime(ch, time.Second); err != nil {
+		t.Fatal("Did not get response in time")
+	}
+}
+
+func TestCrawler_Start_FetcherError(t *testing.T) {
+	Now = func() time.Time {
+		t, _ := time.Parse("2006-Jan-02", "2013-Feb-03")
+		return t
+	}
+
+	defer func() {
+		Now = time.Now
+	}()
+
+	crawler := &Crawler{
+		interval: 200 * time.Millisecond,
+		fetcher: &mockFetcher{
+			err: assert.AnError,
+		},
+		hub: &Hub{
+			dataCh: make(chan []byte, 1),
+		},
+		services: []*Service{
+			{
+				Name: "service1",
+			},
+		},
+		widgets: &Widgets{
+			Gauges: []*Gauge{
+				{
+					cid:      "g1",
+					Metric:   NewSafeMetric("gauge.metric"),
+					MaxValue: 1000,
+					Service:  "service1",
+				},
+			},
+			LineCharts: []*LineChart{},
+			Texts:      []*Text{},
+		},
+		done: make(chan struct{}, 1),
+	}
+
+	go crawler.Start()
+	defer crawler.Stop()
+
+	ch := make(chan bool)
+
+	go func() {
+		assert.Equal(t, `{"g":[{"i":"g1","v":0}],"lc":[],"t":[]}`, string(<-crawler.hub.dataCh))
+
+		ch <- true
+	}()
+
+	if err := WaitTime(ch, time.Second); err != nil {
+		t.Fatal("Did not get response in time")
+	}
+}
+
+func TestCrawler_Start_FetcherTimeout(t *testing.T) {
+	crawler := &Crawler{
+		interval: 200 * time.Millisecond,
+		fetcher: &mockFetcher{
+			timeout: 1200 * time.Millisecond,
+		},
+		hub: &Hub{
+			dataCh: make(chan []byte, 1),
+		},
+		services: []*Service{
+			{
+				Name: "service1",
+			},
+		},
+		widgets: &Widgets{
+			Gauges: []*Gauge{
+				{
+					cid:      "g1",
+					Metric:   NewSafeMetric("gauge.metric"),
+					MaxValue: 1000,
+					Service:  "service1",
+				},
+			},
+			LineCharts: []*LineChart{},
+			Texts:      []*Text{},
+		},
+		done: make(chan struct{}, 1),
+	}
+
+	go crawler.Start()
+	defer crawler.Stop()
+
+	ch := make(chan bool)
+
+	go func() {
+		assert.Equal(t, `{"g":[{"i":"g1","v":0}],"lc":[],"t":[]}`, string(<-crawler.hub.dataCh))
+
+		ch <- true
+	}()
+
+	if err := WaitTime(ch, 1500*time.Millisecond); err != nil {
+		t.Fatal("Did not get response in time")
+	}
+}
+
+func TestCrawler_ExtractUpdates(t *testing.T) {
+	Now = func() time.Time {
+		t, _ := time.Parse("2006-Jan-02", "2013-Feb-03")
+		return t
+	}
+
+	defer func() {
+		Now = time.Now
 	}()
 
 	o1, err := jason.NewObjectFromBytes([]byte(`{"gauge": {"metric": 800}, "process": {"text": "text 1"}, "memstats": {"alloc": 123}}`))
@@ -124,15 +315,15 @@ func TestCrawler_ExtractUpdates(t *testing.T) {
 				ID: "lc1",
 				Points: []LinePoint{
 					{
-						Time: -62135596800,
+						Time: 1359849600,
 						Y:    123,
 					},
 					{
-						Time: -62135596800,
+						Time: 1359849600,
 						Y:    456,
 					},
 					{
-						Time: -62135596800,
+						Time: 1359849600,
 						Y:    0,
 					},
 				},
@@ -141,7 +332,7 @@ func TestCrawler_ExtractUpdates(t *testing.T) {
 				ID: "lc2",
 				Points: []LinePoint{
 					{
-						Time: -62135596800,
+						Time: 1359849600,
 						Y:    0,
 					},
 				},
@@ -150,7 +341,7 @@ func TestCrawler_ExtractUpdates(t *testing.T) {
 				ID: "lc3",
 				Points: []LinePoint{
 					{
-						Time: -62135596800,
+						Time: 1359849600,
 						Y:    456,
 					},
 				},
