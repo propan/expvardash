@@ -41,8 +41,8 @@ func (f *fetcher) Fetch(url url.URL) (*Expvars, error) {
 	}
 
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("Could not fetch expvars from %s", url)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Could not fetch expvars from %s", url.String())
 	}
 
 	object, err := jason.NewObjectFromReader(resp.Body)
