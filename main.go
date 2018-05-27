@@ -142,8 +142,8 @@ func Usage() {
 	flag.PrintDefaults()
 	fmt.Fprintf(os.Stderr, `
 Examples:
-	%s -dashboard=dashboard.json
-	%s -dashboard=dashboard.json -i=10s
+	%s -d=dashboard.json
+	%s -d=dashboard.json -i=10s
 
 For more details and docs, see README: http://github.com/propan/expvardash
 `, progname, progname)
