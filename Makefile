@@ -11,3 +11,6 @@ bundle:
 
 test:
 	go test -race -cover $(PKGS)
+
+install:
+	go install $(PKGS)
