@@ -1,0 +1,12 @@
+{
+  "services": [
+    {
+      "name": "service-1",
+      "url": "localhost:8080/metrics"
+    },
+    {
+      "name": "service-2",
+      "url": "http://localhost:8080/debug/vars"
+    }
+  ]
+}
